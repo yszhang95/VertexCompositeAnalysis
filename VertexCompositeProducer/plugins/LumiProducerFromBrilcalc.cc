@@ -146,7 +146,8 @@ void LumiProducerFromBrilcalc::produce(edm::StreamID iStreamID,
     LogDebug("LumiProducerFromBrilcalc") << "Filling for run " << runls.first << " ls " << runls.second
                                          << " with delivered " << lumiData_.at(runls).first << " dt "
                                          << lumiData_.at(runls).second;
-    iEvent.put(std::make_unique<LumiInfo>(lumiData_.at(runls).second, bxlumi, lumiData_.at(runls).first), "brilcalc");
+    //iEvent.put(std::make_unique<LumiInfo>(lumiData_.at(runls).second, bxlumi, lumiData_.at(runls).first), "brilcalc"); // yousen
+    iEvent.put(std::make_unique<LumiInfo>(lumiData_.at(runls).second, bxlumi), "brilcalc"); // yousen
   } else {
     if (throwIfNotFound_) {
       throw cms::Exception("LumiProducerFromBrilcalc")
@@ -155,7 +156,8 @@ void LumiProducerFromBrilcalc::produce(edm::StreamID iStreamID,
       // just put in zeroes
       edm::LogWarning("LumiProducerFromBrilcalc")
           << "Failed to find luminosity for run " << runls.first << " ls " << runls.second;
-      iEvent.put(std::make_unique<LumiInfo>(0, bxlumi, 0), "brilcalc");
+      //iEvent.put(std::make_unique<LumiInfo>(0, bxlumi, 0), "brilcalc"); // yousen
+      iEvent.put(std::make_unique<LumiInfo>(0, bxlumi), "brilcalc"); // yousen
     }
   }
 }

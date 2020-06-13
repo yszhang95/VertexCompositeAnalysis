@@ -35,9 +35,9 @@
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/HLTReco/interface/TriggerEvent.h"
 #include "DataFormats/HLTReco/interface/TriggerObject.h"
-#include "DataFormats/Luminosity/interface/LumiInfo.h"
-#include "DataFormats/Scalers/interface/LumiScalers.h"
-#include "DataFormats/OnlineMetaData/interface/OnlineLuminosityRecord.h"
+//#include "DataFormats/Luminosity/interface/LumiInfo.h" // yousen
+//#include "DataFormats/Scalers/interface/LumiScalers.h" // yousen
+//#include "DataFormats/OnlineMetaData/interface/OnlineLuminosityRecord.h" // yousen
 #include "DataFormats/EgammaCandidates/interface/HIPhotonIsolation.h"
 #include "DataFormats/Math/interface/angle.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
@@ -70,7 +70,7 @@ private:
   virtual void getTriggerData(const edm::Event&, const edm::EventSetup&);
   virtual void fillEventInfo(const edm::Event&);
   virtual void fillTriggerInfo(const edm::Event&, const edm::EventSetup&);
-  virtual void fillLumiInfo(const edm::Event&);
+  //virtual void fillLumiInfo(const edm::Event&); // yousen
   virtual void fillRecoParticleInfo(const edm::Event&);
   virtual void fillGenParticleInfo(const edm::Event&);
   virtual void endJob();
@@ -134,9 +134,9 @@ private:
   const edm::EDGetTokenT<edm::TriggerResults> tok_triggerResults_;
   const edm::EDGetTokenT<trigger::TriggerEvent> tok_triggerEvent_;
   const edm::EDGetTokenT<edm::TriggerResults> tok_filterResults_;
-  const edm::EDGetTokenT<LumiInfo> tok_lumiInfo_;
-  const edm::EDGetTokenT<LumiScalersCollection> tok_lumiScalers_;
-  const edm::EDGetTokenT<OnlineLuminosityRecord> tok_lumiRecord_;
+  //const edm::EDGetTokenT<LumiInfo> tok_lumiInfo_; // yousen
+  //const edm::EDGetTokenT<LumiScalersCollection> tok_lumiScalers_; // yousen
+  //const edm::EDGetTokenT<OnlineLuminosityRecord> tok_lumiRecord_; // yousen
 
   // input data
   const std::vector<edm::ParameterSet> triggerInfo_;
@@ -480,9 +480,9 @@ ParticleAnalyzer::ParticleAnalyzer(const edm::ParameterSet& iConfig) :
   tok_triggerResults_(consumes<edm::TriggerResults>(iConfig.getUntrackedParameter<edm::InputTag>("triggerResults", edm::InputTag("TriggerResults::HLT")))),
   tok_triggerEvent_(consumes<trigger::TriggerEvent>(iConfig.getUntrackedParameter<edm::InputTag>("triggerEvent", edm::InputTag("hltTriggerSummaryAOD::HLT")))),
   tok_filterResults_(consumes<edm::TriggerResults>(iConfig.getUntrackedParameter<edm::InputTag>("eventFilterResults", edm::InputTag("TriggerResults")))),
-  tok_lumiInfo_(consumes<LumiInfo>(iConfig.getUntrackedParameter<edm::InputTag>("lumiInfo"))),
-  tok_lumiScalers_(consumes<LumiScalersCollection>(iConfig.getUntrackedParameter<edm::InputTag>("lumiScalers", edm::InputTag("scalersRawToDigi")))),
-  tok_lumiRecord_(consumes<OnlineLuminosityRecord>(iConfig.getUntrackedParameter<edm::InputTag>("lumiRecord", edm::InputTag("onlineMetaDataDigis")))),
+  //tok_lumiInfo_(consumes<LumiInfo>(iConfig.getUntrackedParameter<edm::InputTag>("lumiInfo"))), // yousen
+  //tok_lumiScalers_(consumes<LumiScalersCollection>(iConfig.getUntrackedParameter<edm::InputTag>("lumiScalers", edm::InputTag("scalersRawToDigi")))), // yousen
+  //tok_lumiRecord_(consumes<OnlineLuminosityRecord>(iConfig.getUntrackedParameter<edm::InputTag>("lumiRecord", edm::InputTag("onlineMetaDataDigis")))), // yousen
   triggerInfo_(iConfig.getUntrackedParameter<std::vector<edm::ParameterSet> >("triggerInfo")),
   eventFilters_(iConfig.getUntrackedParameter<std::vector<std::string> >("eventFilterNames")),
   selectEvents_(iConfig.getParameter<std::string>("selectEvents")),
@@ -538,7 +538,7 @@ ParticleAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // fill information
   fillEventInfo(iEvent);
   fillTriggerInfo(iEvent, iSetup);
-  fillLumiInfo(iEvent);
+  //fillLumiInfo(iEvent); // yousen
   fillRecoParticleInfo(iEvent);
   fillGenParticleInfo(iEvent);
 
@@ -710,7 +710,7 @@ ParticleAnalyzer::getTriggerData(const edm::Event& iEvent, const edm::EventSetup
         // HLT information
         const auto& presInfo = hltPrescaleProvider_.prescaleValuesInDetail(iEvent, iSetup, triggerName);
         hltPrescale = getUShort(presInfo.second);
-        bit[2] = !hltPrescaleProvider_.rejectedByHLTPrescaler(*triggerResults, triggerIndex);
+        //bit[2] = !hltPrescaleProvider_.rejectedByHLTPrescaler(*triggerResults, triggerIndex); // yousen
         // L1 information
         if (!presInfo.first.empty())
         {
@@ -821,6 +821,8 @@ ParticleAnalyzer::fillEventInfo(const edm::Event& iEvent)
 }
 
 
+/*
+// yousen
 void
 ParticleAnalyzer::fillLumiInfo(const edm::Event& iEvent)
 {
@@ -851,7 +853,7 @@ ParticleAnalyzer::fillLumiInfo(const edm::Event& iEvent)
     eventInfo_.add("rawInstLumi", lumiRecord->instLumi());
   }
 }
-
+*/
 
 void
 ParticleAnalyzer::fillTriggerInfo(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -1216,9 +1218,9 @@ ParticleAnalyzer::fillMuonInfo(const pat::GenericParticle& cand, const UShort_t&
   const auto& mTrack = muon.muonBestTrack();
 
   // general information
-  UInt_t selector = 0;
-  for (size_t i=0; i<27; i++) { selector += (muon.passed(i) ? 1U<<i : 0); }
-  info.add("selector", selector);
+  //UInt_t selector = 0; // yousen
+  //for (size_t i=0; i<27; i++) { selector += (muon.passed(i) ? 1U<<i : 0); } // yousen
+  //info.add("selector", selector); // yousen
 
   UInt_t selectionType = 0;
   for (size_t i=0; i<30; i++) { selectionType += (muon::isGoodMuon(muon, muon::SelectionType(i)) ? 1U<<i : 0); }
