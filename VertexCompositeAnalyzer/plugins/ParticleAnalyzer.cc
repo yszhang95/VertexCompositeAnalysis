@@ -709,6 +709,7 @@ ParticleAnalyzer::getTriggerData(const edm::Event& iEvent, const edm::EventSetup
       {
         // HLT information
         const auto& presInfo = hltPrescaleProvider_.prescaleValuesInDetail(iEvent, iSetup, triggerName);
+        //std::cout << Form("presInfo=%d", presInfo.second) << std::endl;
         hltPrescale = getUShort(presInfo.second);
         //bit[2] = !hltPrescaleProvider_.rejectedByHLTPrescaler(*triggerResults, triggerIndex); // yousen
         // L1 information
@@ -723,6 +724,7 @@ ParticleAnalyzer::getTriggerData(const edm::Event& iEvent, const edm::EventSetup
             l1Pres = (isL1OR ? std::min(l1Pres, pres) : std::max(l1Pres, pres));
           }
           if (l1Pres==1E9) { l1Pres = 0; }
+          //std::cout << Form("l1Prescale=%d", l1Pres) << std::endl;
           l1Prescale = getUShort(l1Pres);
           // L1 decision
           for (const auto p : presInfo.first)
@@ -757,8 +759,10 @@ ParticleAnalyzer::fillEventInfo(const edm::Event& iEvent)
   // fill general information
   eventInfo_.add("RunNb", iEvent.id().run());
   eventInfo_.add("EventNb", getUInt(iEvent.id().event()));
+  //std::cout << Form("luminosityBlock=%d", iEvent.luminosityBlock()) << std::endl;
+  //std::cout << Form("bunchCrossing=%d", iEvent.bunchCrossing()) << std::endl;
   eventInfo_.add("LSNb", getUShort(iEvent.luminosityBlock()));
-  eventInfo_.add("BXNb", getUShort(iEvent.bunchCrossing()));
+  eventInfo_.add("BXNb", getShort(iEvent.bunchCrossing()));
 
   // fill vertex information
   eventInfo_.add("nPV", getUChar(vertices_.size()));
@@ -918,6 +922,7 @@ ParticleAnalyzer::fillTriggerObjectInfo(const pat::TriggerObject& obj, const USh
   const bool found = info.getIndex(index, obj);
   info.push(index, "trigIdx", trigIdx, true);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillTriggerObjectInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -965,6 +970,7 @@ ParticleAnalyzer::fillRecoParticleInfo(const pat::GenericParticle& cand, const U
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "momIdx", momIdx, true);
+  //std::cout << Form("index in fillRecoParticleInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1154,6 +1160,7 @@ ParticleAnalyzer::fillTrackInfo(const pat::GenericParticle& cand, const UShort_t
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillTrackInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1207,6 +1214,7 @@ ParticleAnalyzer::fillMuonInfo(const pat::GenericParticle& cand, const UShort_t&
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillMuonInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1335,6 +1343,7 @@ ParticleAnalyzer::fillElectronInfo(const pat::GenericParticle& cand, const UShor
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillElectronInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1381,6 +1390,7 @@ ParticleAnalyzer::fillPhotonInfo(const pat::GenericParticle& cand, const UShort_
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillPhotonInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1423,6 +1433,7 @@ ParticleAnalyzer::fillJetInfo(const pat::GenericParticle& cand, const UShort_t& 
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillJetInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1482,6 +1493,7 @@ ParticleAnalyzer::fillTauInfo(const pat::GenericParticle& cand, const UShort_t& 
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillTauInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1515,6 +1527,7 @@ ParticleAnalyzer::fillPFCandidateInfo(const pat::GenericParticle& cand, const US
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillPFCandidateInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;
@@ -1572,6 +1585,7 @@ ParticleAnalyzer::fillGenParticleInfo(const reco::GenParticleRef& candR, const U
   size_t index;
   const bool found = info.getIndex(index, cand);
   info.push(index, "candIdx", candIdx, true);
+  //std::cout << Form("index in fillGenParticleInfo = %zu", index) << std::endl;
   const auto& idx = getUShort(index);
   // return if already added
   if (found) return idx;

@@ -229,7 +229,7 @@ private:
   float grand_agl2D_abs[MAXCAN];
   float grand_dlos2D[MAXCAN];
   */
-  bool  isIntermediate[MAXDAU]; //yousen
+  std::vector<int>  dauIsIntermediate_; //yousen
   float grand_mass[MAXDAU][MAXCAN]; //yousen
   float grand_VtxProb[MAXDAU][MAXCAN]; //yousen
   float grand_dlos[MAXDAU][MAXCAN]; //yousen
@@ -426,6 +426,8 @@ PATGenericParticleTreeProducer::PATGenericParticleTreeProducer(const edm::Parame
 
   pTBins_ = iConfig.getUntrackedParameter<std::vector<double> >("pTBins");
   yBins_  = iConfig.getUntrackedParameter<std::vector<double> >("yBins");
+
+  dauIsIntermediate_ = iConfig.getUntrackedParameter<std::vector<int> >("dauIsIntermediate");
 
   //input tokens
   tok_offlineBS_ = consumes<reco::BeamSpot>(iConfig.getUntrackedParameter<edm::InputTag>("beamSpotSrc"));
@@ -760,12 +762,14 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
         return;
       }
       auto id_tmp = std::labs(cand.pdgId());
+      //std::cout << "id_tmp" << std::endl;
       std::vector<const reco::Candidate*> finalParticles_GEN;
       for(uint idx=0; idx<genpars->size(); ++idx)
       {
         const auto& genCand = reco::GenParticleRef(genpars, idx);
         finalParticles_GEN.clear();
         if( std::labs(genCand->pdgId()) != id_tmp) continue;
+        //std::cout << "found a gen cand" << std::endl;
         if( !twoLayerDecay_ && genCand->numberOfDaughters() != nDau)
         {
           std::cout << "number of daughters in gen different from that in reco" << std::endl;
@@ -773,8 +777,9 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
         }
         if( !twoLayerDecay_ && genCand->numberOfDaughters() == nDau)
         {
-          for(size_t iDau=0; iDau<nDau; iDau++)
+          for(size_t iDau=0; iDau<nDau; iDau++){
             finalParticles_GEN.push_back( genCand->daughter(iDau) );
+          }
         }
         if(twoLayerDecay_) 
         {
@@ -782,6 +787,7 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
           {
             const auto& dau_gen = *genCand->daughter(iDau);
             auto nGrandDau = dau_gen.numberOfDaughters();
+            //std::cout << Form("dau_gen_%zu has %zu daughters", iDau, nGrandDau) << std::endl;
             if(nGrandDau>0)
             {
               for(size_t iGrandDau=0; iGrandDau<nGrandDau; iGrandDau++)
@@ -789,10 +795,13 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
                 if(dau_gen.daughter(iGrandDau)->status()!=1) continue;
                 finalParticles_GEN.push_back(dau_gen.daughter(iGrandDau));
               }
+            } else {
+              finalParticles_GEN.push_back(&dau_gen);
             }
           }
         }
         if(finalParticles_GEN.size()!=finalParticles.size()) continue;
+        //std::cout << genCand->pdgId() << "has " << finalParticles_GEN.size()  << std::endl;
         const size_t nFinalParticles = finalParticles.size();
         std::vector<size_t> particlePermutations;
         for(size_t iDauGEN=0; iDauGEN<nFinalParticles; iDauGEN++)
@@ -804,26 +813,29 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
         do {
           std::vector<bool>  matchFianlParticlesP(nFinalParticles);
           std::vector<bool>  matchFianlParticlesM(nFinalParticles);
-          //std::array<bool, 10> matchFianlParticlesP;
-          //std::array<bool, 10> matchFianlParticlesM;
+          //for(const auto e : finalParticles_GEN) std::cout << e << "\t";
+          //std::cout << std::endl;
           for(size_t iDau=0; iDau<nFinalParticles; iDau++) {
             matchFianlParticlesP[iDau] = false;
             matchFianlParticlesM[iDau] = false;
             const auto& recoFinal = *finalParticles[iDau];
             const auto& genFinal = *finalParticles_GEN[particlePermutations[iDau]];
             if(recoFinal.charge() != genFinal.charge()) continue;
+            //std::cout << "match charge" << std::endl;
             if( std::fabs(genFinal.mass() - recoFinal.mass()) < 0.001 ) matchFianlParticlesM[iDau] = true;
+            //if(matchFianlParticlesM[iDau]) std::cout << "match m" << std::endl;
             double dPtRel = std::fabs(recoFinal.pt()-genFinal.pt())/sqrt(recoFinal.pt()*genFinal.pt());
             double dR = reco::deltaR(recoFinal.p4().Eta(), recoFinal.p4().Phi(), genFinal.p4().Eta(), genFinal.p4().Phi());
             //double dR = reco::deltaR(recoFinal.eta(), recoFinal.phi(), genFinal.eta(), genFinal.phi());
             if(dPtRel < deltaPt_ && dR < deltaR_) {
               matchFianlParticlesP[iDau] = true;
-              break;
+              //break;
             }
-            found = !(std::count(matchFianlParticlesP.begin(), matchFianlParticlesP.end(), false) > 0);
-            swap_tmp = !(std::count(matchFianlParticlesM.begin(), matchFianlParticlesM.end(), false) > 0);
-            if(found) break;
+            //if(matchFianlParticlesP[iDau]) std::cout << "match P" << std::endl;
           }
+          found = !(std::count(matchFianlParticlesP.begin(), matchFianlParticlesP.end(), false) > 0);
+          swap_tmp = std::count(matchFianlParticlesM.begin(), matchFianlParticlesM.end(), false) > 0;
+          if(found) break;
         } while ( std::next_permutation(particlePermutations.begin(), particlePermutations.end()) );
 
         matchGEN[it] = found;
@@ -1027,10 +1039,6 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
       }
     }
  
-    // two-layer decay // yousen
-    for(ushort iDau=0; iDau<NDAU_; iDau++)
-      isIntermediate[iDau] = false;
-    
     if(twoLayerDecay_)
     {
       // yousen
@@ -1044,9 +1052,9 @@ PATGenericParticleTreeProducer::fillRECO(const edm::Event& iEvent, const edm::Ev
       {
         const auto& d = dauColl[iDau];
         if(!d.hasUserData("daughters")) {
+          //std::cout << d.pdgId() << "has no daughters" << std::endl;
           continue;
         }
-        isIntermediate[iDau] = true;
         grand_mass[iDau][it] = d.mass();
         const auto& daughters = *d.userData<pat::GenericParticleCollection>("daughters");
         for(ushort iGDau=0; iGDau<NGDAU_; iGDau++)
@@ -1316,6 +1324,8 @@ PATGenericParticleTreeProducer::beginJob()
   if(!doRecoNtuple_ && !doGenNtuple_) throw cms::Exception("PATGenericParticleAnalyzer") << "No output for either RECO or GEN!! Fix config!!" << std::endl;
   if(twoLayerDecay_ && doMuon_) throw cms::Exception("PATGenericParticleAnalyzer") << "Muons cannot be coming from two layer decay!! Fix config!!" << std::endl;
 
+    
+
   //if(saveHistogram_) initHistogram();
   if(saveTree_) initTree();
 }
@@ -1479,17 +1489,17 @@ PATGenericParticleTreeProducer::initTree()
         }
         */
         for(ushort iDau=1; iDau<=NDAU_; iDau++){
-          if(!isIntermediate[iDau]) continue;
-          PATGenericParticleNtuple->Branch(Form("massDaughter%d", iDau), grand_mass[iDau], Form("massDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("VtxProbDaughter%d", iDau), grand_VtxProb[iDau], Form("VtxProbDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("3DCosPointingAngleDaughter%d", iDau), grand_agl[iDau], Form("3DCosPointingAngleDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("3DPointingAngleDaughter%d", iDau), grand_agl_abs[iDau], Form("3DPointingAngleDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("2DCosPointingAngleDaughter%d", iDau), grand_agl2D[iDau], Form("2DCosPointingAngleDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("2DPointingAngleDaughter%d", iDau), grand_agl2D_abs[iDau], Form("2DPointingAngleDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("3DDecayLengthSignificanceDaughter%d", iDau), grand_dlos[iDau], Form("3DDecayLengthSignificanceDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("3DDecayLengthDaughter%d", iDau), grand_dl[iDau], Form("3DDecayLengthDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("2DDecayLengthSignificanceDaughter%d", iDau), grand_dlos2D[iDau], Form("2DDecayLengthSignificanceDaughter%d[candSize]/F", iDau));
-          PATGenericParticleNtuple->Branch(Form("2DDecayLengthDaughter%d", iDau), grand_dl2D[iDau], Form("2DDecayLengthDaughter%d[candSize]/F", iDau));
+          if(!dauIsIntermediate_[iDau-1]) continue;
+          PATGenericParticleNtuple->Branch(Form("massDaughter%d", iDau), grand_mass[iDau-1], Form("massDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("VtxProbDaughter%d", iDau), grand_VtxProb[iDau-1], Form("VtxProbDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("3DCosPointingAngleDaughter%d", iDau), grand_agl[iDau-1], Form("3DCosPointingAngleDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("3DPointingAngleDaughter%d", iDau), grand_agl_abs[iDau-1], Form("3DPointingAngleDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("2DCosPointingAngleDaughter%d", iDau), grand_agl2D[iDau-1], Form("2DCosPointingAngleDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("2DPointingAngleDaughter%d", iDau), grand_agl2D_abs[iDau-1], Form("2DPointingAngleDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("3DDecayLengthSignificanceDaughter%d", iDau), grand_dlos[iDau-1], Form("3DDecayLengthSignificanceDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("3DDecayLengthDaughter%d", iDau), grand_dl[iDau-1], Form("3DDecayLengthDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("2DDecayLengthSignificanceDaughter%d", iDau), grand_dlos2D[iDau-1], Form("2DDecayLengthSignificanceDaughter%d[candSize]/F", iDau));
+          PATGenericParticleNtuple->Branch(Form("2DDecayLengthDaughter%d", iDau), grand_dl2D[iDau-1], Form("2DDecayLengthDaughter%d[candSize]/F", iDau));
           for(ushort iGDau=1; iGDau<=NGDAU_; iGDau++)
           {
             PATGenericParticleNtuple->Branch(Form("zDCASignificanceGrandDaughter%dDau%d", iGDau, iDau), grand_dzos[iGDau-1][iDau-1], Form("zDCASignificanceGrandDaughter%dDau%d[candSize]/F", iGDau, iDau));

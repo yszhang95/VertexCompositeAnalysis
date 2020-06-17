@@ -125,28 +125,20 @@ process.generalLamCCandidatesNew = process.generalParticles.clone(
   )
 
 # tree producer
-process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.particle_tree_cff")
-process.generalanaNew = process.particleAna_mc.clone(
-    recoParticles = cms.InputTag("generalLamCCandidatesNew"),
-    #triggerResults = cms.untracked.InputTag("TriggerResults::HLT"),
-    #triggerEvent   = cms.untracked.InputTag(""),
-    #triggerInfo = cms.untracked.VPSet([cms.PSet(path = cms.string('HLT_PAFullTracks_Multiplicity280_v*'))]),
-    triggerEvent   = cms.untracked.InputTag(""),
-    triggerInfo = cms.untracked.VPSet(),
-    eventFilterResults = cms.untracked.InputTag("TriggerResults::ANASKIM"),
-    eventFilterNames = cms.untracked.vstring(['Flag_colEvtSel']),
-    selectEvents = cms.string("eventFilter_HM_step"),
-    centralityBin = cms.untracked.InputTag("",""),
-    centrality    = cms.untracked.InputTag(""),
-    eventPlane    = cms.untracked.InputTag(""),
-    lumiInfo    = cms.untracked.InputTag("", ""),
-    lumiScalers = cms.untracked.InputTag(""),
-    lumiRecord  = cms.untracked.InputTag(""),
-    #addSource = cms.untracked.bool(True),
-    addTrack = cms.untracked.bool(False),
-    dauIDs = cms.untracked.vint32([310, 2212]),
-    genParticles = cms.untracked.InputTag("genParticles"),
-    genInfo      = cms.untracked.InputTag("")
+process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.generalanalyzer_tree_cff")
+process.generalanaNew = process.generalana_mc.clone(
+  VertexCompositeCollection = cms.untracked.InputTag("generalLamCCandidatesNew"),
+  #VertexCompositeCollection = cms.untracked.InputTag("generalKsCandidatesNew"),
+  isEventPlane = cms.bool(False),
+  eventplaneSrc = cms.InputTag(""),
+  centralityBinLabel = cms.InputTag("",""),
+  FilterResultCollection = cms.untracked.InputTag("TriggerResults::ANASKIM"),
+  selectEvents = cms.untracked.string("eventFilter_HM_step"),
+  GenParticleCollection = cms.untracked.InputTag("genParticles"),
+  twoLayerDecay = cms.untracked.bool(True),
+  deltaPt = cms.untracked.double(0.5),
+  deltaR = cms.untracked.double(0.3),
+  dauIsIntermediate = cms.untracked.vint32(1, 0),
     )
 
 process.generalanaNewSeq = cms.Sequence(process.generalanaNew)
@@ -216,6 +208,6 @@ process.schedule = cms.Schedule(
     process.ks_rereco_step,
     process.lamc_rereco_step,
     #process.rereco_step,
-    process.output_HM_step,
+    #process.output_HM_step,
     process.generalana_step
 )
