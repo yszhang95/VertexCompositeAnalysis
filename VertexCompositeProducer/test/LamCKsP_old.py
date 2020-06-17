@@ -23,7 +23,7 @@ process.source = cms.Source("PoolSource",
      'root://cmsxrootd.fnal.gov///store/himc/pPb816Summer16DR/LambdaC-KsPr_LCpT-0p9_PbP-EmbEPOS_8p16_Pythia8/AODSIM/PbPEmb_80X_mcRun2_pA_v4-v1/90000/FEE76ED5-FEA1-E711-9163-FA163E497357.root'
    ),
 )
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(2000))
 #process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(50))
 
 import HLTrigger.HLTfilters.hltHighLevel_cfi
@@ -45,13 +45,14 @@ process.generalKsCandidatesNew = process.generalParticles.clone(
        ),
     pocaSelection = cms.string(""
        "mass >= 0.44 && mass <= 0.56 && " "pt >= 1.0"
-       "&& userFloat('dca') >= 0.5 && userFloat('dca') <= 9999." # assume dca is in cm, check later
+       #"&& userFloat('dca') < 0.5 " # assume dca is in cm, check later
        ),
     postSelection = cms.string(""
        ),
     finalSelection = cms.string(""
-       "userFloat('lVtxMag') >= 0.0 && userFloat('lVtxSig') >= 3.0"
-       "&& abs(rapidity) < 2.0"
+       #"userFloat('lVtxMag') >= 0.0 && userFloat('lVtxSig') >= 3.0"
+       #"&& abs(rapidity) < 2.4"
+       #"&& cos(userFloat('angle3D')) > 0.999"
        ),
 #
     # daughter information
@@ -59,21 +60,25 @@ process.generalKsCandidatesNew = process.generalParticles.clone(
         cms.PSet(pdgId = cms.int32(211), charge = cms.int32(-1),
            selection = cms.string(
               "pt>1.0 && abs(eta)<2.4"
-              "&& quality('loose') && ptError/pt<0.1"
+              "&& quality('loose')"" && ptError/pt<0.1"
               "&& normalizedChi2<7.0"
               "&& numberOfValidHits >=4"
               ),
            finalSelection = cms.string(''
+             "userFloat('dzSig') > 1.0"
+             "&& userFloat('dxySig') > 1.0"
               )
            ),
         cms.PSet(pdgId = cms.int32(211), charge = cms.int32(+1),
            selection = cms.string(
               "pt>1.0 && abs(eta)<2.4"
-              "&& quality('loose') && ptError/pt<0.1"
+              "&& quality('loose') ""&& ptError/pt<0.1"
               "&& normalizedChi2<7.0"
               "&& numberOfValidHits >=4"
               ),
            finalSelection = cms.string(''
+             "userFloat('dzSig') > 1.0"
+             "&& userFloat('dxySig') > 1.0"
               )
            )
     ])
