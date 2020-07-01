@@ -45,14 +45,14 @@ process.generalKsCandidatesNew = process.generalParticles.clone(
        ),
     pocaSelection = cms.string(""
        "mass >= 0.44 && mass <= 0.56 && " "pt >= 1.0"
-       #"&& userFloat('dca') < 0.5 " # assume dca is in cm, check later
+       "&& userFloat('dca') < 0.5 " # assume dca is in cm, check later
        ),
     postSelection = cms.string(""
        ),
     finalSelection = cms.string(""
-       #"userFloat('lVtxMag') >= 0.0 && userFloat('lVtxSig') >= 3.0"
-       #"&& abs(rapidity) < 2.4"
-       #"&& cos(userFloat('angle3D')) > 0.999"
+       "userFloat('lVtxMag') >= 0.0 && userFloat('lVtxSig') >= 5.0"
+       "&& abs(rapidity) < 2.4"
+       "&& cos(userFloat('angle3D')) > 0.999"
        ),
 #
     # daughter information
@@ -65,8 +65,8 @@ process.generalKsCandidatesNew = process.generalParticles.clone(
               "&& numberOfValidHits >=4"
               ),
            finalSelection = cms.string(''
-             "userFloat('dzSig') > 1.0"
-             "&& userFloat('dxySig') > 1.0"
+             #"userFloat('dzSig') > 1.0"
+             #"&& userFloat('dxySig') > 1.0"
               )
            ),
         cms.PSet(pdgId = cms.int32(211), charge = cms.int32(+1),
@@ -77,8 +77,8 @@ process.generalKsCandidatesNew = process.generalParticles.clone(
               "&& numberOfValidHits >=4"
               ),
            finalSelection = cms.string(''
-             "userFloat('dzSig') > 1.0"
-             "&& userFloat('dxySig') > 1.0"
+             #"userFloat('dzSig') > 1.0"
+             #"&& userFloat('dxySig') > 1.0"
               )
            )
     ])
@@ -131,7 +131,20 @@ process.generalLamCCandidatesNew = process.generalParticles.clone(
 
 # tree producer
 process.load("VertexCompositeAnalysis.VertexCompositeAnalyzer.generalanalyzer_tree_cff")
-process.generalanaNew = process.generalana_mc.clone(
+process.generalksanaNew = process.generalana_mc.clone(
+  VertexCompositeCollection = cms.untracked.InputTag("generalKsCandidatesNew"),
+  isEventPlane = cms.bool(False),
+  eventplaneSrc = cms.InputTag(""),
+  centralityBinLabel = cms.InputTag("",""),
+  FilterResultCollection = cms.untracked.InputTag("TriggerResults::ANASKIM"),
+  selectEvents = cms.untracked.string("eventFilter_HM_step"),
+  GenParticleCollection = cms.untracked.InputTag("genParticles"),
+  twoLayerDecay = cms.untracked.bool(False),
+  deltaPt = cms.untracked.double(0.5),
+  deltaR = cms.untracked.double(0.03),
+  dauIsIntermediate = cms.untracked.vint32(0, 0),
+    )
+process.generallamcanaNew = process.generalana_mc.clone(
   VertexCompositeCollection = cms.untracked.InputTag("generalLamCCandidatesNew"),
   #VertexCompositeCollection = cms.untracked.InputTag("generalKsCandidatesNew"),
   isEventPlane = cms.bool(False),
@@ -142,11 +155,12 @@ process.generalanaNew = process.generalana_mc.clone(
   GenParticleCollection = cms.untracked.InputTag("genParticles"),
   twoLayerDecay = cms.untracked.bool(True),
   deltaPt = cms.untracked.double(0.5),
-  deltaR = cms.untracked.double(0.3),
+  deltaR = cms.untracked.double(0.03),
   dauIsIntermediate = cms.untracked.vint32(1, 0),
     )
 
-process.generalanaNewSeq = cms.Sequence(process.generalanaNew)
+process.generalksanaNewSeq = cms.Sequence(process.generalksanaNew)
+process.generallamcanaNewSeq = cms.Sequence(process.generallamcanaNew)
 
 # Add PbPb collision event selection
 process.PAprimaryVertexFilter = cms.EDFilter("VertexSelector",
@@ -197,7 +211,8 @@ process.output_HM = cms.OutputModule("PoolOutputModule",
     )
 )
 
-process.generalana_step = cms.EndPath( process.generalanaNewSeq )
+process.generalksana_step = cms.EndPath( process.generalksanaNewSeq )
+process.generallamcana_step = cms.EndPath( process.generallamcanaNewSeq )
 
 
 process.output_HM.outputCommands = cms.untracked.vstring('drop *',
@@ -214,5 +229,6 @@ process.schedule = cms.Schedule(
     process.lamc_rereco_step,
     #process.rereco_step,
     #process.output_HM_step,
-    process.generalana_step
+    process.generalksana_step,
+    process.generallamcana_step
 )

@@ -44,12 +44,12 @@ def submit(config):
 
 dataMap = {
             #"lamc2ksppt0p9": { "PD": "/LambdaC-KsPr_LCpT-0p9_PbP-EmbEPOS_8p16_Pythia8/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM", "Units": 1, "Memory": 1600, "RunTime": 820 },
-            "lamc2ksppt5p9-Bst": { "PD": "/LambdaC-KsPr_LCpT-5p9_PbP-EmbEPOS_8p16_Pythia8/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM", "Units": 1, "Memory": 1600, "RunTime": 180 }
+            "lamc2ksppt5p9-Bst": { "PD": "/LambdaC-KsPr_LCpT-5p9_PbP-EmbEPOS_8p16_Pythia8/pPb816Summer16DR-PbPEmb_80X_mcRun2_pA_v4-v1/AODSIM", "Units": 1, "Memory": 1600, "RunTime": 820 }
             }
 
 # Submit the MC PDs
 for key, val in dataMap.items():
-    config.General.requestName = 'VertexCompositeTree_'+key+'_lamCTest_v2'
+    config.General.requestName = 'VertexCompositeTree_'+key+'_lamCTest_v3'
     config.Data.inputDataset = val["PD"]
     config.Data.unitsPerJob = val["Units"]
     config.JobType.maxMemoryMB = val["Memory"]
